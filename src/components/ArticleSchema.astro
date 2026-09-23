@@ -1,0 +1,32 @@
+---
+import { SITE } from '../site.config';
+
+interface Props {
+  title: string;
+  description: string;
+  url: string;
+  image?: string;
+  datePublished: Date;
+  dateModified: Date;
+}
+
+const { title, description, url, image, datePublished, dateModified } = Astro.props;
+const imagen = image ?? SITE.ogImage;
+const organizacion = { '@type': 'Organization', name: SITE.name, url: new URL('/', Astro.site).toString() };
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: title,
+  description,
+  url,
+  mainEntityOfPage: url,
+  datePublished: datePublished.toISOString(),
+  dateModified: dateModified.toISOString(),
+  author: organizacion,
+  publisher: organizacion,
+  ...(imagen && { image: new URL(imagen, Astro.site).toString() }),
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(schema)} />

@@ -1,0 +1,17 @@
+---
+import { AMAZON_AFFILIATE } from '../site.config';
+
+interface Props {
+  asin: string;
+  region?: keyof typeof AMAZON_AFFILIATE.regions;
+  class?: string;
+}
+
+const { asin, region = AMAZON_AFFILIATE.defaultRegion, class: className } = Astro.props;
+const { domain, tag } = AMAZON_AFFILIATE.regions[region];
+const href = `https://www.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
+---
+
+<a href={href} class={className} rel="nofollow sponsored noopener" target="_blank">
+  <slot />
+</a>

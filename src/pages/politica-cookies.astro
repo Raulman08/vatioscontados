@@ -1,0 +1,46 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { SITE, ADSENSE, EZOIC } from '../site.config';
+
+const hayPublicidadActiva = ADSENSE.enabled || EZOIC.enabled;
+---
+
+<Layout title="Política de Cookies" description={`Política de cookies de ${SITE.name}.`}>
+  <h1 class="page-title">Política de Cookies</h1>
+
+  <div class="prose">
+    <h2>1. ¿Qué son las cookies?</h2>
+    <p>
+      Las cookies son pequeños archivos que se almacenan en tu navegador al visitar un sitio web. Se usan para
+      recordar preferencias, medir el tráfico o mostrar publicidad relevante.
+    </p>
+
+    <h2>2. Cookies que usa este sitio ahora mismo</h2>
+    {hayPublicidadActiva ? (
+      <p>
+        Este sitio tiene activas herramientas de publicidad
+        {ADSENSE.enabled && ' (Google AdSense)'}
+        {ADSENSE.enabled && EZOIC.enabled && ' y'}
+        {EZOIC.enabled && ' (Ezoic)'}
+        , que instalan cookies propias y de terceros para mostrar anuncios y medir su rendimiento. Puedes
+        gestionar o rechazar estas cookies desde el panel de consentimiento que se muestra al entrar en el sitio,
+        o desde la configuración de tu navegador.
+      </p>
+    ) : (
+      <p>
+        Actualmente este sitio <strong>no tiene activa ninguna herramienta de publicidad ni analítica</strong>,
+        por lo que no instala cookies de terceros. Esta página se actualizará automáticamente en cuanto se activen
+        (por ejemplo, Google AdSense o Ezoic), junto con el correspondiente panel de consentimiento previo.
+      </p>
+    )}
+
+    <h2>3. Cómo desactivar las cookies</h2>
+    <p>
+      Puedes eliminar y bloquear las cookies de este u otros sitios web desde la configuración de tu navegador.
+      Ten en cuenta que bloquear todas las cookies puede afectar a la funcionalidad de otros sitios que sí las
+      necesiten para funcionar.
+    </p>
+
+    <p><em>Última actualización: 23 de septiembre de 2026.</em></p>
+  </div>
+</Layout>

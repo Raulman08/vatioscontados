@@ -1,0 +1,70 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import AmazonLink from './AmazonLink.astro';
+import { formatDate } from '../utils/text';
+
+interface Props {
+  modelos: CollectionEntry<'modelos'>[];
+}
+
+const { modelos } = Astro.props;
+---
+
+<section class="modelos" aria-labelledby="modelos-titulo">
+  <h2 id="modelos-titulo" class="section-title">Modelos que recomendamos</h2>
+
+  <div class="tabla-scroll">
+    <table class="tabla">
+      <caption>Medidas en cm según el fabricante (ancho × fondo × alto)</caption>
+      <thead>
+        <tr>
+          <th scope="col">Modelo</th>
+          <th scope="col">Cerrado / montado</th>
+          <th scope="col">Abierto</th>
+        </tr>
+      </thead>
+      <tbody>
+        {modelos.map(({ id, data }) => (
+          <tr>
+            <th scope="row">
+              <a href={`#modelo-${id}`}>{data.nombre}</a>
+              {data.etiqueta && <span class="modelo__etiqueta">{data.etiqueta}</span>}
+            </th>
+            <td>{data.medidas.ancho} × {data.medidas.fondo} × {data.medidas.alto}</td>
+            <td>{data.medidas.abierto ?? '—'}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  {modelos.map(({ id, data }) => (
+    <article class="modelo" id={`modelo-${id}`}>
+      {data.etiqueta && <span class="modelo__etiqueta">{data.etiqueta}</span>}
+      <h3 class="modelo__nombre">{data.nombre}</h3>
+      {data.resumen && <p>{data.resumen}</p>}
+      {(data.pros.length > 0 || data.contras.length > 0) && (
+        <div class="modelo__pros-contras">
+          {data.pros.length > 0 && (
+            <div>
+              <p class="modelo__subtitulo">A favor</p>
+              <ul>{data.pros.map((p) => <li>{p}</li>)}</ul>
+            </div>
+          )}
+          {data.contras.length > 0 && (
+            <div>
+              <p class="modelo__subtitulo">En contra</p>
+              <ul>{data.contras.map((c) => <li>{c}</li>)}</ul>
+            </div>
+          )}
+        </div>
+      )}
+      {data.asin ? (
+        <AmazonLink asin={data.asin} class="btn">Ver precio en Amazon</AmazonLink>
+      ) : (
+        <a href={data.url} class="btn" rel="nofollow sponsored noopener" target="_blank">Ver en {data.tienda}</a>
+      )}
+      <p class="modelo__verificado">Medidas comprobadas el {formatDate(data.verificado)}</p>
+    </article>
+  ))}
+</section>

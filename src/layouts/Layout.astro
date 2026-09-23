@@ -1,0 +1,85 @@
+---
+import AdSense from '../components/AdSense.astro';
+import Ezoic from '../components/Ezoic.astro';
+import { AMAZON_DISCLOSURE, SITE } from '../site.config';
+import { MENU, PIE } from '../navegacion';
+import '@fontsource-variable/inter';
+import '@fontsource-variable/fraunces';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  image?: string;
+  type?: 'website' | 'article';
+  // Título completo sin el sufijo " | nombre del sitio" (portada).
+  fullTitle?: boolean;
+}
+
+const { title, description, image, type = 'website', fullTitle = false } = Astro.props;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+// Google corta el título hacia los 60 caracteres: el sufijo con el nombre del sitio solo se añade si cabe.
+const conSufijo = `${title} | ${SITE.name}`;
+const pageTitle = fullTitle || conSufijo.length > 60 ? title : conSufijo;
+const shareImage = image && !image.endsWith('.svg') ? image : SITE.ogImage;
+const actual = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonicalURL} />
+
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+
+    <meta property="og:type" content={type} />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    {shareImage && <meta property="og:image" content={new URL(shareImage, Astro.site)} />}
+
+    <meta name="twitter:card" content="summary_large_image" />
+
+    {SITE.googleSiteVerification && (
+      <meta name="google-site-verification" content={SITE.googleSiteVerification} />
+    )}
+
+    <slot name="head" />
+    <AdSense />
+    <Ezoic />
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="site-header__logo" href="/">{SITE.name}</a>
+        <nav class="site-nav" aria-label="Principal">
+          <ul>
+            {MENU.map((item) => (
+              <li>
+                <a href={item.href} aria-current={actual.startsWith(item.href) ? 'page' : undefined}>{item.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <main class="container" id="contenido">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="site-footer__inner">
+        <p>{SITE.name} — contenido informativo, no somos el fabricante ni el vendedor de los productos mencionados. Algunos enlaces son de afiliado: si compras a través de ellos podemos recibir una comisión, sin coste extra para ti. {AMAZON_DISCLOSURE}</p>
+        <nav class="site-footer__links" aria-label="Pie de página">
+          {PIE.map((item) => <a href={item.href}>{item.label}</a>)}
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

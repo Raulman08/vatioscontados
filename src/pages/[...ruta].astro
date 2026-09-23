@@ -1,0 +1,168 @@
+---
+import { getCollection, getEntries, render } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import ArticleSchema from '../components/ArticleSchema.astro';
+import BreadcrumbSchema from '../components/BreadcrumbSchema.astro';
+import FaqSchema from '../components/FaqSchema.astro';
+import ModelosSeleccionados from '../components/ModelosSeleccionados.astro';
+import Card from '../components/Card.astro';
+import Anuncio from '../components/Anuncio.astro';
+import { ADSENSE } from '../site.config';
+import { ETIQUETA_TIPO, fechaDe, porOrden, rutaDe, seccionDe } from '../utils/guias';
+import { formatDate, readingTime } from '../utils/text';
+
+export async function getStaticPaths() {
+  const guias = await getCollection('guias', ({ data }) => !data.draft);
+  return guias.map((guia) => ({ params: { ruta: guia.id }, props: { guia, guias } }));
+}
+
+const { guia, guias } = Astro.props;
+const { data } = guia;
+const { Content, headings } = await render(guia);
+const url = new URL(rutaDe(guia), Astro.site).toString();
+const seccion = seccionDe(guia);
+const esPilar = data.tipo === 'pilar';
+const pilar = seccion && !esPilar ? guias.find((g) => g.id === seccion.slug) : undefined;
+
+const migas = [{ name: 'Inicio', path: '/' }];
+if (pilar && seccion) migas.push({ name: seccion.label, path: rutaDe(pilar) });
+migas.push({ name: esPilar && seccion ? seccion.label : data.title, path: rutaDe(guia) });
+
+const indice = headings.filter((h) => h.depth === 2);
+const modelos = await getEntries(data.modelos);
+
+const deLaSeccion = esPilar
+  ? guias.filter((g) => g.id.startsWith(`${guia.id}/`)).sort(porOrden)
+  : [];
+const aprender = deLaSeccion.filter((g) => g.data.tipo !== 'comparativa');
+const comprar = deLaSeccion.filter((g) => g.data.tipo === 'comparativa');
+
+const yaListadas = new Set(deLaSeccion.map((g) => g.id));
+const siguiente = (data.siguiente.length ? await getEntries(data.siguiente) : pilar ? [pilar] : []).filter(
+  (g) => !g.data.draft && !yaListadas.has(g.id)
+);
+---
+
+<Layout
+  title={data.seoTitle ?? data.title}
+  description={data.description}
+  image={data.image}
+  type={data.tipo === 'pagina' ? 'website' : 'article'}
+>
+  <BreadcrumbSchema
+    slot="head"
+    items={migas.map((m) => ({ name: m.name, url: new URL(m.path, Astro.site).toString() }))}
+  />
+  {data.tipo !== 'pagina' && (
+    <ArticleSchema
+      slot="head"
+      title={data.title}
+      description={data.description}
+      url={url}
+      image={data.image}
+      datePublished={data.pubDate}
+      dateModified={fechaDe(guia)}
+    />
+  )}
+  {data.faqs.length > 0 && <FaqSchema slot="head" items={data.faqs} />}
+
+  <nav class="breadcrumbs" aria-label="Migas de pan">
+    {migas.slice(0, -1).map((m) => (
+      <Fragment><a href={m.path}>{m.name}</a> / </Fragment>
+    ))}
+    <span aria-current="page">{migas[migas.length - 1].name}</span>
+  </nav>
+
+  <article class="guia">
+    {ETIQUETA_TIPO[data.tipo] && <span class="eyebrow">{ETIQUETA_TIPO[data.tipo]}</span>}
+    <h1 class="page-title">{data.title}</h1>
+    {data.tipo !== 'pagina' && (
+      <p class="post-meta">
+        <span>Actualizado el {formatDate(fechaDe(guia))}</span>
+        <span aria-hidden="true">·</span>
+        <span>{readingTime(guia.body ?? '')} min de lectura</span>
+      </p>
+    )}
+
+    {data.image && (
+      <img
+        class="guia__image"
+        src={data.image}
+        alt=""
+        width="1200"
+        height="675"
+        fetchpriority="high"
+        decoding="async"
+      />
+    )}
+
+    {data.resumen && (
+      <div class="tldr">
+        <span class="tldr__label">Respuesta rápida</span>
+        <p>{data.resumen}</p>
+      </div>
+    )}
+
+    {modelos.length > 0 && <ModelosSeleccionados modelos={modelos} />}
+
+    {indice.length >= 3 && (
+      <nav class="toc" aria-label="En esta guía">
+        <p class="toc__title">En esta guía</p>
+        <ol>
+          {indice.map((h) => <li><a href={`#${h.slug}`}>{h.text}</a></li>)}
+        </ol>
+      </nav>
+    )}
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    {data.faqs.length > 0 && (
+      <section class="faq">
+        <h2 class="section-title">Preguntas frecuentes</h2>
+        {data.faqs.map((faq) => (
+          <details class="faq__item">
+            <summary>{faq.question}</summary>
+            <p>{faq.answer}</p>
+          </details>
+        ))}
+      </section>
+    )}
+  </article>
+
+  {data.tipo !== 'pagina' && <Anuncio bloque={ADSENSE.slotFinal} />}
+
+  {aprender.length > 0 && (
+    <section class="bloque">
+      <h2 class="section-title">Guías de {seccion?.label.toLowerCase()}</h2>
+      <div class="card-grid">
+        {aprender.map((g) => (
+          <Card href={rutaDe(g)} title={g.data.title} description={g.data.description} tag={ETIQUETA_TIPO[g.data.tipo]} />
+        ))}
+      </div>
+    </section>
+  )}
+
+  {comprar.length > 0 && (
+    <section class="bloque">
+      <h2 class="section-title">Qué comprar</h2>
+      <div class="card-grid">
+        {comprar.map((g) => (
+          <Card href={rutaDe(g)} title={g.data.title} description={g.data.description} tag={ETIQUETA_TIPO[g.data.tipo]} />
+        ))}
+      </div>
+    </section>
+  )}
+
+  {siguiente.length > 0 && (
+    <section class="bloque siguiente">
+      <h2 class="section-title">Siguiente paso</h2>
+      <div class="card-grid">
+        {siguiente.map((g) => (
+          <Card href={rutaDe(g)} title={g.data.title} description={g.data.description} tag={ETIQUETA_TIPO[g.data.tipo] || undefined} />
+        ))}
+      </div>
+    </section>
+  )}
+</Layout>

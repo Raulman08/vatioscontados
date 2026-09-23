@@ -1,0 +1,146 @@
+---
+// Calculadora de consumo y coste. El resultado inicial se calcula aquí (funciona sin JavaScript);
+// el script solo lo recalcula cuando el usuario cambia algún dato.
+import { euros, kwh } from '../utils/consumo';
+
+interface Props {
+  modo: 'potencia' | 'ciclo' | 'anual';
+  precio: number;
+  titulo?: string;
+  vatios?: number;
+  horasDia?: number;
+  cargaMedia?: number;
+  kwhCiclo?: number;
+  ciclosSemana?: number;
+  nombreCiclo?: string;
+  kwhAnual?: number;
+  mesesUso?: number;
+}
+
+const {
+  modo,
+  precio,
+  titulo = 'Calcula tu caso',
+  vatios = 1000,
+  horasDia = 1,
+  cargaMedia = 1,
+  kwhCiclo = 1,
+  ciclosSemana = 3,
+  nombreCiclo = 'ciclo',
+  kwhAnual = 200,
+  mesesUso = 12,
+} = Astro.props;
+
+const kwhMes =
+  modo === 'potencia'
+    ? (vatios / 1000) * horasDia * cargaMedia * 30
+    : modo === 'ciclo'
+      ? kwhCiclo * ciclosSemana * (52 / 12)
+      : kwhAnual / 12;
+const kwhAno = kwhMes * mesesUso;
+---
+
+<form class="calculadora" data-calculadora data-modo={modo} aria-labelledby="calculadora-titulo">
+  <h2 id="calculadora-titulo" class="section-title">{titulo}</h2>
+  <div class="calculadora__campos">
+    {modo === 'potencia' && (
+      <Fragment>
+        <label>
+          Potencia del aparato (W)
+          <input type="number" name="vatios" min="0" step="1" value={vatios} inputmode="decimal" />
+        </label>
+        <label>
+          Horas encendido al día
+          <input type="number" name="horasDia" min="0" max="24" step="0.25" value={horasDia} inputmode="decimal" />
+        </label>
+        <label>
+          Tiempo a plena potencia (%)
+          <input type="number" name="carga" min="1" max="100" step="1" value={Math.round(cargaMedia * 100)} inputmode="numeric" />
+          <small>Los aparatos con termostato o compresor se paran a ratos. Si no lo sabes, deja el valor propuesto.</small>
+        </label>
+      </Fragment>
+    )}
+    {modo === 'ciclo' && (
+      <Fragment>
+        <label>
+          Consumo por {nombreCiclo} (kWh)
+          <input type="number" name="kwhCiclo" min="0" step="0.05" value={kwhCiclo} inputmode="decimal" />
+          <small>En la etiqueta energética viene en kWh por 100 ciclos: divide entre 100.</small>
+        </label>
+        <label>
+          Veces por semana
+          <input type="number" name="ciclosSemana" min="0" step="0.5" value={ciclosSemana} inputmode="decimal" />
+        </label>
+      </Fragment>
+    )}
+    {modo === 'anual' && (
+      <label>
+        Consumo anual de la etiqueta (kWh/año)
+        <input type="number" name="kwhAnual" min="0" step="1" value={kwhAnual} inputmode="decimal" />
+      </label>
+    )}
+    <label>
+      Precio de la luz (€/kWh)
+      <input type="number" name="precio" min="0" step="0.001" value={precio.toFixed(3)} inputmode="decimal" />
+      <small>Media del PVPC de los últimos 30 días con impuestos. Si tienes tarifa fija, pon la de tu factura.</small>
+    </label>
+    {modo !== 'anual' && (
+      <label>
+        Meses de uso al año
+        <input type="number" name="meses" min="1" max="12" step="1" value={mesesUso} inputmode="numeric" />
+      </label>
+    )}
+  </div>
+
+  <output class="calculadora__resultado" aria-live="polite">
+    <div>
+      <span>Al mes</span>
+      <strong data-salida="eurMes">{euros(kwhMes * precio)}</strong>
+      <small data-salida="kwhMes">{kwh(kwhMes)}</small>
+    </div>
+    <div>
+      <span>Al año</span>
+      <strong data-salida="eurAno">{euros(kwhAno * precio)}</strong>
+      <small data-salida="kwhAno">{kwh(kwhAno)}</small>
+    </div>
+  </output>
+</form>
+
+<script>
+  const numero = (n: number, d: number) =>
+    n.toLocaleString('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const euros = (n: number) => `${numero(n, n < 0.1 ? 3 : 2)} €`;
+  const kwh = (n: number) => `${numero(n, n < 1 ? 2 : n < 100 ? 1 : 0)} kWh`;
+
+  for (const form of document.querySelectorAll<HTMLFormElement>('[data-calculadora]')) {
+    const valor = (nombre: string, porDefecto = 0) => {
+      const campo = form.elements.namedItem(nombre) as HTMLInputElement | null;
+      if (!campo) return porDefecto;
+      const n = Number(campo.value.replace(',', '.'));
+      return Number.isFinite(n) && n >= 0 ? n : 0;
+    };
+    const salida = (clave: string, texto: string) => {
+      const el = form.querySelector(`[data-salida="${clave}"]`);
+      if (el) el.textContent = texto;
+    };
+
+    const recalcular = () => {
+      const modo = form.dataset.modo;
+      const kwhMes =
+        modo === 'potencia'
+          ? (valor('vatios') / 1000) * valor('horasDia') * (valor('carga') / 100) * 30
+          : modo === 'ciclo'
+            ? valor('kwhCiclo') * valor('ciclosSemana') * (52 / 12)
+            : valor('kwhAnual') / 12;
+      const kwhAno = kwhMes * (modo === 'anual' ? 12 : valor('meses', 12));
+      const precio = valor('precio');
+      salida('eurMes', euros(kwhMes * precio));
+      salida('kwhMes', kwh(kwhMes));
+      salida('eurAno', euros(kwhAno * precio));
+      salida('kwhAno', kwh(kwhAno));
+    };
+
+    form.addEventListener('input', recalcular);
+    form.addEventListener('submit', (e) => e.preventDefault());
+  }
+</script>

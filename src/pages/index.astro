@@ -1,0 +1,60 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import Card from '../components/Card.astro';
+import { SITE } from '../site.config';
+import { obtenerPrecioLuz } from '../data/precio-luz';
+import { CATEGORIAS, eurKwh, euros, kwhAno, kwhMes } from '../utils/consumo';
+import { ETIQUETA_TIPO, porOrden, rutaDe } from '../utils/guias';
+
+const precio = await obtenerPrecioLuz();
+const p = precio.media30;
+const ordenadas = [...precio.horas].sort((a, b) => a.eurKwh - b.eurKwh);
+const hora = (h: number) => `${String(h).padStart(2, '0')}:00`;
+const diaTexto = new Date(`${precio.dia}T12:00`).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+
+const aparatos = (await getCollection('aparatos', ({ data }) => !data.draft))
+  .map((a) => ({ aparato: a, mes: kwhMes(a.data.calculo, 'tipico'), ano: kwhAno(a, 'tipico') }))
+  .sort((a, b) => b.ano - a.ano);
+const guias = (await getCollection('guias', ({ data }) => !data.draft && data.tipo === 'guia')).sort(porOrden);
+---
+
+<Layout title={SITE.homeTitle} fullTitle description={SITE.description || SITE.name}>
+  <section class="hero">
+    <h1>{SITE.name}</h1>
+    <p>{SITE.description}</p>
+    <a class="btn" href="/calculadora/">Calcular lo que gasta un aparato</a>
+  </section>
+
+  <section class="precio-resumen precio-resumen--portada" aria-label="Precio de la luz">
+    <div><span>Precio medio del {diaTexto}</span><strong>{eurKwh(precio.mediaDia)}</strong></div>
+    <div><span>Hora más barata</span><strong>{eurKwh(ordenadas[0].eurKwh)}</strong><small>desde las {hora(ordenadas[0].hora)}</small></div>
+    <div><span>Hora más cara</span><strong>{eurKwh(ordenadas.at(-1)!.eurKwh)}</strong><small>desde las {hora(ordenadas.at(-1)!.hora)}</small></div>
+    <div><a href="/precio-luz/">Ver todas las horas →</a></div>
+  </section>
+
+  <section class="bloque">
+    <h2 class="section-title">Lo que más gasta en casa</h2>
+    <p class="page-subtitle">Ordenado por lo que cuesta al año con uso típico, al precio medio de la luz de los últimos 30 días ({eurKwh(p)}).</p>
+    <div class="card-grid card-grid--4">
+      {aparatos.slice(0, 8).map(({ aparato, mes }) => (
+        <Card
+          href={`/aparatos/${aparato.id}/`}
+          title={aparato.data.nombre}
+          description={`${euros(mes * p)} al mes${aparato.data.mesesUso < 12 ? ` · ${aparato.data.mesesUso} meses al año` : ''}`}
+          tag={CATEGORIAS[aparato.data.categoria]}
+        />
+      ))}
+    </div>
+    <p><a href="/aparatos/">Ver la tabla completa de {aparatos.length} aparatos →</a></p>
+  </section>
+
+  <section class="bloque">
+    <h2 class="section-title">Guías para ahorrar</h2>
+    <div class="card-grid">
+      {guias.map((g) => (
+        <Card href={rutaDe(g)} title={g.data.title} description={g.data.description} tag={ETIQUETA_TIPO[g.data.tipo]} />
+      ))}
+    </div>
+  </section>
+</Layout>

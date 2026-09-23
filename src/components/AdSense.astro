@@ -1,0 +1,11 @@
+---
+import { ADSENSE } from '../site.config';
+
+if (!ADSENSE.enabled) return null;
+---
+
+<script
+  is:inline
+  async
+  src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE.clientId}`}
+  crossorigin="anonymous"></script>

@@ -1,0 +1,187 @@
+---
+import { getCollection, getEntries, render } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import ArticleSchema from '../../components/ArticleSchema.astro';
+import BreadcrumbSchema from '../../components/BreadcrumbSchema.astro';
+import FaqSchema from '../../components/FaqSchema.astro';
+import Calculadora from '../../components/Calculadora.astro';
+import ModelosSeleccionados from '../../components/ModelosSeleccionados.astro';
+import Anuncio from '../../components/Anuncio.astro';
+import Card from '../../components/Card.astro';
+import { ADSENSE } from '../../site.config';
+import { obtenerPrecioLuz } from '../../data/precio-luz';
+import { CATEGORIAS, etiquetaUnidad, eurKwh, euros, kwh, kwhAno, kwhMes, kwhUnidad, vatios, type Escenario } from '../../utils/consumo';
+import { formatDate } from '../../utils/text';
+
+export async function getStaticPaths() {
+  const aparatos = await getCollection('aparatos', ({ data }) => !data.draft);
+  return aparatos.map((aparato) => ({ params: { slug: aparato.id }, props: { aparato } }));
+}
+
+const { aparato } = Astro.props;
+const { data } = aparato;
+const { calculo } = data;
+const { Content, headings } = await render(aparato);
+const precio = await obtenerPrecioLuz();
+const p = precio.media30;
+const url = new URL(`/aparatos/${aparato.id}/`, Astro.site).toString();
+const fecha = data.updatedDate ?? data.pubDate;
+
+const escenarios: { clave: Escenario; nombre: string }[] = [
+  { clave: 'min', nombre: 'Bajo' },
+  { clave: 'tipico', nombre: 'Típico' },
+  { clave: 'max', nombre: 'Alto' },
+];
+
+const mesTipico = kwhMes(calculo, 'tipico');
+const descripcionPotencia =
+  calculo.modo === 'potencia'
+    ? `entre ${vatios(calculo.vatios.min)} y ${vatios(calculo.vatios.max)} de potencia`
+    : calculo.modo === 'ciclo'
+      ? `entre ${kwh(calculo.kwhCiclo.min)} y ${kwh(calculo.kwhCiclo.max)} por ${calculo.nombreCiclo}`
+      : `entre ${kwh(calculo.kwhAnual.min)} y ${kwh(calculo.kwhAnual.max)} al año según su etiqueta`;
+const nombre = data.nombre.toLowerCase();
+const articulo = data.articulo[0].toUpperCase() + data.articulo.slice(1);
+const resumen = `${articulo} ${nombre} consume ${descripcionPotencia}. Con un uso típico (${data.usoSupuesto}) gasta unos ${kwh(mesTipico)} al mes, que al precio medio de la luz de los últimos 30 días (${eurKwh(p)} con impuestos) son unos ${euros(mesTipico * p)} al mes.`;
+
+const indice = headings.filter((h) => h.depth === 2);
+const relacionados = (await getEntries(data.relacionados)).filter((a) => !a.data.draft);
+const guias = (await getEntries(data.guias)).filter((g) => !g.data.draft);
+const modelos = await getEntries(data.modelos);
+const migas = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Aparatos', path: '/aparatos/' },
+  { name: data.nombre, path: `/aparatos/${aparato.id}/` },
+];
+---
+
+<Layout title={data.seoTitle ?? data.title} description={data.description} type="article">
+  <BreadcrumbSchema slot="head" items={migas.map((m) => ({ name: m.name, url: new URL(m.path, Astro.site).toString() }))} />
+  <ArticleSchema slot="head" title={data.title} description={data.description} url={url} datePublished={data.pubDate} dateModified={fecha} />
+  {data.faqs.length > 0 && <FaqSchema slot="head" items={data.faqs} />}
+
+  <nav class="breadcrumbs" aria-label="Migas de pan">
+    <a href="/">Inicio</a> / <a href="/aparatos/">Aparatos</a> / <span aria-current="page">{data.nombre}</span>
+  </nav>
+
+  <article class="guia">
+    <span class="eyebrow">{CATEGORIAS[data.categoria]}</span>
+    <h1 class="page-title">{data.title}</h1>
+    <p class="post-meta">
+      <span>Actualizado el {formatDate(fecha)}</span>
+      <span aria-hidden="true">·</span>
+      <span>Precio de la luz: media del {formatDate(new Date(`${precio.dias30.desde}T12:00`))} al {formatDate(new Date(`${precio.dias30.hasta}T12:00`))}</span>
+    </p>
+
+    <div class="tldr">
+      <span class="tldr__label">Respuesta rápida</span>
+      <p>{resumen}</p>
+    </div>
+
+    <section class="bloque-consumo" aria-labelledby="consumo-titulo">
+      <h2 id="consumo-titulo" class="section-title">Consumo y coste de {data.articulo} {nombre}</h2>
+      <div class="tabla-scroll">
+        <table class="tabla">
+          <caption>
+            Uso supuesto: {data.usoSupuesto}{data.mesesUso < 12 && `, ${data.mesesUso} meses al año`}. Precio: {eurKwh(p)} (PVPC con impuestos, media de 30 días).
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col"></th>
+              {escenarios.map((e) => <th scope="col">{e.nombre}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {calculo.modo === 'potencia' && (
+              <tr>
+                <th scope="row">Potencia</th>
+                {escenarios.map((e) => <td>{vatios(calculo.vatios[e.clave])}</td>)}
+              </tr>
+            )}
+            <tr>
+              <th scope="row">{etiquetaUnidad(calculo)}</th>
+              {escenarios.map((e) => (
+                <td>{euros(kwhUnidad(calculo, e.clave) * p)}<br /><small>{kwh(kwhUnidad(calculo, e.clave))}</small></td>
+              ))}
+            </tr>
+            <tr>
+              <th scope="row">Al mes</th>
+              {escenarios.map((e) => (
+                <td><strong>{euros(kwhMes(calculo, e.clave) * p)}</strong><br /><small>{kwh(kwhMes(calculo, e.clave))}</small></td>
+              ))}
+            </tr>
+            <tr>
+              <th scope="row">Al año</th>
+              {escenarios.map((e) => (
+                <td>{euros(kwhAno(aparato, e.clave) * p)}<br /><small>{kwh(kwhAno(aparato, e.clave))}</small></td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      {data.standbyW !== undefined && (
+        <p class="nota">
+          En espera (apagado pero enchufado) consume unos {vatios(data.standbyW)}: {euros((data.standbyW / 1000) * 24 * 365 * p)} al año si está siempre enchufado.
+        </p>
+      )}
+    </section>
+
+    <Calculadora
+      modo={calculo.modo}
+      precio={p}
+      titulo={`Calcula lo que gasta tu ${nombre}`}
+      vatios={calculo.modo === 'potencia' ? calculo.vatios.tipico : undefined}
+      horasDia={calculo.modo === 'potencia' ? calculo.horasDia : undefined}
+      cargaMedia={calculo.modo === 'potencia' ? calculo.cargaMedia : undefined}
+      kwhCiclo={calculo.modo === 'ciclo' ? calculo.kwhCiclo.tipico : undefined}
+      ciclosSemana={calculo.modo === 'ciclo' ? calculo.ciclosSemana : undefined}
+      nombreCiclo={calculo.modo === 'ciclo' ? calculo.nombreCiclo : undefined}
+      kwhAnual={calculo.modo === 'anual' ? calculo.kwhAnual.tipico : undefined}
+      mesesUso={data.mesesUso}
+    />
+
+    {modelos.length > 0 && <ModelosSeleccionados modelos={modelos} />}
+
+    {indice.length >= 3 && (
+      <nav class="toc" aria-label="En esta página">
+        <p class="toc__title">En esta página</p>
+        <ol>{indice.map((h) => <li><a href={`#${h.slug}`}>{h.text}</a></li>)}</ol>
+      </nav>
+    )}
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    {data.faqs.length > 0 && (
+      <section class="faq">
+        <h2 class="section-title">Preguntas frecuentes</h2>
+        {data.faqs.map((faq) => (
+          <details class="faq__item">
+            <summary>{faq.question}</summary>
+            <p>{faq.answer}</p>
+          </details>
+        ))}
+      </section>
+    )}
+  </article>
+
+  <Anuncio bloque={ADSENSE.slotFinal} />
+
+  {(relacionados.length > 0 || guias.length > 0) && (
+    <section class="bloque siguiente">
+      <h2 class="section-title">Siguiente paso</h2>
+      <div class="card-grid">
+        {guias.map((g) => <Card href={`/${g.id}/`} title={g.data.title} description={g.data.description} tag="Guía" />)}
+        {relacionados.map((a) => (
+          <Card
+            href={`/aparatos/${a.id}/`}
+            title={a.data.title}
+            description={`${euros(kwhMes(a.data.calculo, 'tipico') * p)} al mes con uso típico`}
+            tag={CATEGORIAS[a.data.categoria]}
+          />
+        ))}
+      </div>
+    </section>
+  )}
+</Layout>

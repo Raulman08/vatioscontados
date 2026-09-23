@@ -1,0 +1,14 @@
+---
+import { ADSENSE } from '../site.config';
+import { htmlAnuncio } from '../utils/anuncios.mjs';
+
+interface Props {
+  // Id del bloque de AdSense (no se llama `slot` porque en Astro es un atributo reservado).
+  bloque: string;
+}
+
+const { bloque } = Astro.props;
+if (!ADSENSE.enabled || !bloque) return null;
+---
+
+<Fragment set:html={htmlAnuncio(ADSENSE.clientId, bloque)} />

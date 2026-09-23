@@ -1,0 +1,93 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import ArticleSchema from '../../components/ArticleSchema.astro';
+import BreadcrumbSchema from '../../components/BreadcrumbSchema.astro';
+import Anuncio from '../../components/Anuncio.astro';
+import Card from '../../components/Card.astro';
+import { ADSENSE } from '../../site.config';
+import { obtenerPrecioLuz } from '../../data/precio-luz';
+import { CATEGORIAS, eurKwh, euros, kwh, kwhAno, kwhMes } from '../../utils/consumo';
+import { formatDate } from '../../utils/text';
+
+const precio = await obtenerPrecioLuz();
+const p = precio.media30;
+const aparatos = (await getCollection('aparatos', ({ data }) => !data.draft))
+  .map((a) => ({ aparato: a, mes: kwhMes(a.data.calculo, 'tipico'), ano: kwhAno(a, 'tipico') }))
+  .sort((a, b) => b.ano - a.ano);
+const porCategoria = Map.groupBy(aparatos, (a) => a.aparato.data.categoria);
+const titulo = 'Cuánto gasta cada electrodoméstico: tabla de consumo en euros';
+const descripcion = `Consumo mensual y anual de ${aparatos.length} aparatos de casa, en kWh y en euros con el precio medio de la luz de los últimos 30 días, ordenados de más a menos gasto.`;
+const fechaPrecios = `del ${formatDate(new Date(`${precio.dias30.desde}T12:00`))} al ${formatDate(new Date(`${precio.dias30.hasta}T12:00`))}`;
+---
+
+<Layout title="Cuánto gasta cada electrodoméstico: tabla de consumo" description={descripcion} type="article">
+  <BreadcrumbSchema
+    slot="head"
+    items={[
+      { name: 'Inicio', url: new URL('/', Astro.site).toString() },
+      { name: 'Aparatos', url: new URL('/aparatos/', Astro.site).toString() },
+    ]}
+  />
+  <ArticleSchema
+    slot="head"
+    title={titulo}
+    description={descripcion}
+    url={new URL('/aparatos/', Astro.site).toString()}
+    datePublished={new Date('2026-09-23T12:00')}
+    dateModified={new Date(precio.consultado)}
+  />
+
+  <nav class="breadcrumbs" aria-label="Migas de pan"><a href="/">Inicio</a> / <span aria-current="page">Aparatos</span></nav>
+
+  <article class="guia">
+    <h1 class="page-title">{titulo}</h1>
+    <div class="tldr">
+      <span class="tldr__label">Respuesta rápida</span>
+      <p>
+        Lo que más gasta en una casa es lo que produce calor o frío: {aparatos.slice(0, 3).map((a) => a.aparato.data.nombre.toLowerCase()).join(', ')}.
+        La tabla usa el precio medio de la luz {fechaPrecios} ({eurKwh(p)} con impuestos) y un uso típico de cada aparato; en cada ficha puedes ajustarlo al tuyo.
+      </p>
+    </div>
+
+    <div class="tabla-scroll">
+      <table class="tabla tabla--ranking">
+        <caption>Ordenado por coste al año con uso típico. El uso supuesto de cada aparato está en su ficha.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Aparato</th>
+            <th scope="col">Al mes</th>
+            <th scope="col">Al año</th>
+            <th scope="col">Uso supuesto</th>
+          </tr>
+        </thead>
+        <tbody>
+          {aparatos.map(({ aparato, mes, ano }) => (
+            <tr>
+              <th scope="row"><a href={`/aparatos/${aparato.id}/`}>{aparato.data.nombre}</a></th>
+              <td><strong>{euros(mes * p)}</strong><br /><small>{kwh(mes)}</small></td>
+              <td>{euros(ano * p)}<br /><small>{kwh(ano)}</small></td>
+              <td><small>{aparato.data.usoSupuesto}{aparato.data.mesesUso < 12 && ` (${aparato.data.mesesUso} meses al año)`}</small></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="nota">
+      ¿Tu aparato no está? Calcula su gasto con la <a href="/calculadora/">calculadora</a> a partir de su potencia. Cómo obtenemos cada cifra: <a href="/como-calculamos/">cómo calculamos</a>.
+    </p>
+  </article>
+
+  <Anuncio bloque={ADSENSE.slotFinal} />
+
+  {[...porCategoria].map(([categoria, lista]) => (
+    <section class="bloque">
+      <h2 class="section-title">{CATEGORIAS[categoria]}</h2>
+      <div class="card-grid">
+        {lista.map(({ aparato, mes }) => (
+          <Card href={`/aparatos/${aparato.id}/`} title={aparato.data.nombre} description={`${euros(mes * p)} al mes con uso típico`} />
+        ))}
+      </div>
+    </section>
+  ))}
+</Layout>

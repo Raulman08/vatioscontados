@@ -1,0 +1,109 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ArticleSchema from '../components/ArticleSchema.astro';
+import BreadcrumbSchema from '../components/BreadcrumbSchema.astro';
+import Anuncio from '../components/Anuncio.astro';
+import Card from '../components/Card.astro';
+import { ADSENSE } from '../site.config';
+import { obtenerPrecioLuz } from '../data/precio-luz';
+import { eurKwh } from '../utils/consumo';
+import { formatDate } from '../utils/text';
+
+const precio = await obtenerPrecioLuz();
+const dia = new Date(`${precio.dia}T12:00`);
+const diaTexto = dia.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+const ordenadas = [...precio.horas].sort((a, b) => a.eurKwh - b.eurKwh);
+const baratas = new Set(ordenadas.slice(0, 3).map((h) => h.hora));
+const caras = new Set(ordenadas.slice(-3).map((h) => h.hora));
+const maximo = ordenadas.at(-1)!.eurKwh;
+const hora = (h: number) => `${String(h).padStart(2, '0')}:00–${String((h + 1) % 24).padStart(2, '0')}:00`;
+const titulo = `Precio de la luz por horas: ${diaTexto}`;
+const descripcion = 'Precio de la luz PVPC hora a hora con impuestos, las horas más baratas y más caras del día y la media de los últimos 30 días, con datos de Red Eléctrica.';
+---
+
+<Layout title="Precio de la luz por horas hoy (PVPC)" description={descripcion} type="article">
+  <BreadcrumbSchema
+    slot="head"
+    items={[
+      { name: 'Inicio', url: new URL('/', Astro.site).toString() },
+      { name: 'Precio de la luz', url: new URL('/precio-luz/', Astro.site).toString() },
+    ]}
+  />
+  <ArticleSchema
+    slot="head"
+    title={titulo}
+    description={descripcion}
+    url={new URL('/precio-luz/', Astro.site).toString()}
+    datePublished={new Date('2026-09-23T12:00')}
+    dateModified={new Date(precio.consultado)}
+  />
+
+  <nav class="breadcrumbs" aria-label="Migas de pan"><a href="/">Inicio</a> / <span aria-current="page">Precio de la luz</span></nav>
+
+  <article class="guia">
+    <span class="eyebrow">PVPC · Red Eléctrica</span>
+    <h1 class="page-title">{titulo}</h1>
+    <p class="post-meta">
+      <span>Datos consultados el {formatDate(new Date(precio.consultado))}</span>
+      {precio.fuente === 'respaldo' && <span>· Mostrando los últimos datos guardados</span>}
+    </p>
+
+    <div class="tldr">
+      <span class="tldr__label">Respuesta rápida</span>
+      <p>
+        La hora más barata es de {hora(ordenadas[0].hora)} ({eurKwh(ordenadas[0].eurKwh)}) y la más cara de {hora(ordenadas.at(-1)!.hora)} ({eurKwh(maximo)}).
+        La media del día es {eurKwh(precio.mediaDia)} y la de los últimos 30 días, {eurKwh(precio.media30)}. Precios del kWh con impuestos.
+      </p>
+    </div>
+
+    <div class="precio-resumen">
+      <div><span>Media del día</span><strong>{eurKwh(precio.mediaDia)}</strong></div>
+      <div><span>Hora más barata</span><strong>{eurKwh(ordenadas[0].eurKwh)}</strong><small>{hora(ordenadas[0].hora)}</small></div>
+      <div><span>Hora más cara</span><strong>{eurKwh(maximo)}</strong><small>{hora(ordenadas.at(-1)!.hora)}</small></div>
+      <div><span>Media 30 días</span><strong>{eurKwh(precio.media30)}</strong></div>
+    </div>
+
+    <div class="tabla-scroll">
+      <table class="tabla tabla--horas">
+        <caption>PVPC del {formatDate(dia)}, en €/kWh con impuesto eléctrico e IVA. Fuente: Red Eléctrica (apidatos.ree.es).</caption>
+        <thead>
+          <tr><th scope="col">Hora</th><th scope="col">Precio</th><th scope="col"><span class="visually-hidden">Comparación</span></th></tr>
+        </thead>
+        <tbody>
+          {precio.horas.map((h) => (
+            <tr class={baratas.has(h.hora) ? 'hora--barata' : caras.has(h.hora) ? 'hora--cara' : undefined}>
+              <th scope="row">{hora(h.hora)}</th>
+              <td>{eurKwh(h.eurKwh)}{baratas.has(h.hora) && ' · barata'}{caras.has(h.hora) && ' · cara'}</td>
+              <td class="barra-celda" aria-hidden="true"><span class="barra" style={`width:${Math.round((h.eurKwh / maximo) * 100)}%`}></span></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose">
+      <h2>Cómo leer estos precios</h2>
+      <p>
+        Son los precios de la tarifa regulada (PVPC) que publica Red Eléctrica para cada hora, con el impuesto especial sobre la electricidad y el IVA ya sumados: lo que cuesta cada kWh que gastas en esa hora. Los precios de cada día se publican la tarde anterior, así que a partir de la noche esta página puede mostrar ya los de mañana.
+      </p>
+      <p>
+        No incluyen el término de potencia ni el alquiler del contador, que no dependen de la hora. Si tienes una tarifa del mercado libre, pagas el precio de tu contrato, no este.
+      </p>
+      <h2>Qué hacer con esta información</h2>
+      <p>
+        Lo que se puede programar y consume mucho (<a href="/aparatos/lavadora/">lavadora</a>, <a href="/aparatos/lavavajillas/">lavavajillas</a>, <a href="/aparatos/termo-electrico/">termo</a>, <a href="/aparatos/secadora/">secadora</a>) conviene ponerlo en las horas baratas.
+        Los tramos fijos de punta, llano y valle están en la guía de <a href="/ahorro/tramos-horarios-luz/">tramos horarios de la luz</a>.
+      </p>
+    </div>
+  </article>
+
+  <Anuncio bloque={ADSENSE.slotFinal} />
+
+  <section class="bloque siguiente">
+    <h2 class="section-title">Siguiente paso</h2>
+    <div class="card-grid">
+      <Card href="/aparatos/" title="Cuánto gasta cada aparato" description="La tabla de consumo de electrodomésticos en euros, con este precio." />
+      <Card href="/ahorro/tramos-horarios-luz/" title="Tramos horarios de la luz" description="Horas punta, llano y valle, y qué mover a las horas baratas." tag="Guía" />
+    </div>
+  </section>
+</Layout>

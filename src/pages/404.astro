@@ -1,0 +1,14 @@
+---
+// Sin 404.html, Cloudflare Pages sirve la portada con código 200 en cualquier URL inexistente (soft 404).
+import Layout from '../layouts/Layout.astro';
+import { MENU } from '../navegacion';
+---
+
+<Layout title="Página no encontrada" description="La página que buscas no existe o ha cambiado de dirección.">
+  <meta slot="head" name="robots" content="noindex" />
+  <h1 class="page-title">Esta página no existe</h1>
+  <p class="page-subtitle">Puede que haya cambiado de dirección. Empieza por una de estas secciones:</p>
+  <ul class="prose">
+    {MENU.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+  </ul>
+</Layout>

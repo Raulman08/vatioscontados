@@ -1,0 +1,35 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { AMAZON_DISCLOSURE, SITE } from '../site.config';
+---
+
+<Layout title="Política de Afiliación" description={`Divulgación de afiliación de ${SITE.name}.`}>
+  <h1 class="page-title">Política de Afiliación</h1>
+
+  <div class="prose">
+    <p>
+      {SITE.name} participa en el <strong>Programa de Afiliados de Amazon EU</strong>, un programa de publicidad
+      para afiliados diseñado para ofrecer a los sitios web un medio para obtener comisiones por publicidad,
+      publicitando e incluyendo enlaces a Amazon.es.
+    </p>
+    <p><strong>{AMAZON_DISCLOSURE}</strong></p>
+    <p>
+      Esto significa que algunos de los enlaces a productos de este sitio son enlaces de afiliado: si haces clic
+      en ellos y realizas una compra, {SITE.name} puede recibir una pequeña comisión, <strong>sin ningún coste
+      adicional para ti</strong>. El precio que pagas es exactamente el mismo que si accedieras directamente a
+      la tienda.
+    </p>
+    <p>
+      Solo recomendamos productos que consideramos útiles para el propósito de este sitio (organización y
+      aprovechamiento de espacios pequeños). La comisión de afiliado no influye en qué productos se muestran ni
+      en el contenido editorial de las guías.
+    </p>
+    <p>
+      En el futuro este sitio podrá participar también en otros programas de afiliación (por ejemplo, a través de
+      redes como Awin, con marcas como Leroy Merlin o El Corte Inglés, o el programa de afiliados de IKEA). Esta
+      página se actualizará para reflejarlo en cuanto se activen.
+    </p>
+
+    <p><em>Última actualización: 23 de septiembre de 2026.</em></p>
+  </div>
+</Layout>

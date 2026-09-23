@@ -1,0 +1,12 @@
+---
+import { EZOIC } from '../site.config';
+
+if (!EZOIC.enabled) return null;
+---
+
+<meta name="ezoic-site-verification" content={EZOIC.siteId} />
+<script is:inline async src="https://www.ezojs.com/ezoic/sa.min.js"></script>
+<script is:inline>
+  window.ezstandalone = window.ezstandalone || {};
+  ezstandalone.cmd = ezstandalone.cmd || [];
+</script>

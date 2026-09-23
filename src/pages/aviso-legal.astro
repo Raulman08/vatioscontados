@@ -1,0 +1,49 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { SITE } from '../site.config';
+---
+
+<Layout title="Aviso Legal" description={`Aviso legal de ${SITE.name}.`}>
+  <h1 class="page-title">Aviso Legal</h1>
+
+  <div class="prose">
+    <h2>1. Datos identificativos</h2>
+    <p>
+      En cumplimiento del deber de información recogido en el artículo 10 de la Ley 34/2002, de 11 de julio,
+      de Servicios de la Sociedad de la Información y del Comercio Electrónico (LSSI-CE), se informa de los
+      siguientes datos: el titular de este sitio web es <strong>[NOMBRE COMPLETO / RAZÓN SOCIAL — pendiente de completar]</strong>,
+      con NIF/DNI <strong>[PENDIENTE]</strong> y domicilio en <strong>[PENDIENTE]</strong>, España.
+      Puede contactar a través del correo electrónico <a href="mailto:raulmarro08@gmail.com">raulmarro08@gmail.com</a>.
+    </p>
+
+    <h2>2. Objeto</h2>
+    <p>
+      {SITE.name} es un sitio web de contenido informativo sobre organización, muebles plegables y soluciones
+      de almacenaje para espacios reducidos. Parte del contenido incluye enlaces de afiliación (ver
+      <a href="/politica-afiliacion/">Política de Afiliación</a>), por lo que este sitio puede recibir una
+      comisión por las compras realizadas a través de esos enlaces, sin coste adicional para el usuario.
+    </p>
+
+    <h2>3. Condiciones de uso</h2>
+    <p>
+      El acceso a este sitio web es gratuito y no requiere registro. El usuario se compromete a hacer un uso
+      adecuado de los contenidos y servicios ofrecidos, y a no emplearlos para incurrir en actividades ilícitas
+      o contrarias a la buena fe y al ordenamiento legal.
+    </p>
+
+    <h2>4. Propiedad intelectual</h2>
+    <p>
+      Los textos originales de este sitio son propiedad de {SITE.name}. Las imágenes de productos, marcas y
+      nombres comerciales mencionados pertenecen a sus respectivos titulares y se citan a efectos meramente
+      informativos e identificativos.
+    </p>
+
+    <h2>5. Legislación aplicable</h2>
+    <p>
+      Las presentes condiciones se rigen por la legislación española. Para cualquier controversia derivada del
+      uso de este sitio, las partes se someten a los juzgados y tribunales que correspondan conforme a derecho.
+    </p>
+
+    <p><em>Última actualización: 23 de septiembre de 2026.</em></p>
+  </div>
+</Layout>

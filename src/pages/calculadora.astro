@@ -1,0 +1,59 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import BreadcrumbSchema from '../components/BreadcrumbSchema.astro';
+import Calculadora from '../components/Calculadora.astro';
+import Anuncio from '../components/Anuncio.astro';
+import { ADSENSE } from '../site.config';
+import { obtenerPrecioLuz } from '../data/precio-luz';
+import { eurKwh, vatios } from '../utils/consumo';
+
+const precio = await obtenerPrecioLuz();
+const conPotencia = (await getCollection('aparatos', ({ data }) => !data.draft && data.calculo.modo === 'potencia'))
+  .map((a) => ({ id: a.id, nombre: a.data.nombre, calculo: a.data.calculo }))
+  .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+---
+
+<Layout
+  title="Calculadora de consumo eléctrico en euros"
+  description="Calcula cuánto gasta cualquier aparato al mes y al año a partir de su potencia en vatios y las horas de uso, con el precio actual de la luz."
+>
+  <BreadcrumbSchema
+    slot="head"
+    items={[
+      { name: 'Inicio', url: new URL('/', Astro.site).toString() },
+      { name: 'Calculadora', url: new URL('/calculadora/', Astro.site).toString() },
+    ]}
+  />
+  <nav class="breadcrumbs" aria-label="Migas de pan"><a href="/">Inicio</a> / <span aria-current="page">Calculadora</span></nav>
+
+  <article class="guia">
+    <h1 class="page-title">Calculadora de consumo eléctrico</h1>
+    <p class="page-subtitle">
+      Pon la potencia del aparato (viene en su placa de características, en vatios) y las horas que lo usas. El precio propuesto es la media del PVPC de los últimos 30 días con impuestos ({eurKwh(precio.media30)}); cámbialo por el de tu factura si tienes tarifa fija.
+    </p>
+
+    <Calculadora modo="potencia" precio={precio.media30} titulo="Calcula el gasto" vatios={1000} horasDia={2} />
+
+    <div class="prose">
+      <h2>Potencias de referencia</h2>
+      <p>Si no sabes la potencia de tu aparato, estas son las típicas. En cada ficha tienes el rango y cómo gastar menos.</p>
+      <table>
+        <thead><tr><th>Aparato</th><th>Potencia típica</th></tr></thead>
+        <tbody>
+          {conPotencia.map((a) => (
+            <tr>
+              <td><a href={`/aparatos/${a.id}/`}>{a.nombre}</a></td>
+              <td>{a.calculo.modo === 'potencia' && vatios(a.calculo.vatios.tipico)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p>
+        Para aparatos que se miden por lavado (lavadora, lavavajillas, secadora) o por consumo anual (nevera, termo), usa la calculadora de su ficha. La fórmula completa está en <a href="/ahorro/como-calcular-consumo/">cómo calcular el consumo de un aparato</a>.
+      </p>
+    </div>
+  </article>
+
+  <Anuncio bloque={ADSENSE.slotFinal} />
+</Layout>
