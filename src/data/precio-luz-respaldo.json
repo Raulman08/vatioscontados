@@ -1,110 +1,110 @@
 {
   "fuente": "ree",
-  "consultado": "2026-09-23T14:40:19.924Z",
-  "dia": "2026-09-23",
+  "consultado": "2026-09-24T06:08:07.760Z",
+  "dia": "2026-09-24",
   "horas": [
     {
       "hora": 0,
-      "eurKwh": 0.2529
+      "eurKwh": 0.2404
     },
     {
       "hora": 1,
-      "eurKwh": 0.244
+      "eurKwh": 0.24
     },
     {
       "hora": 2,
-      "eurKwh": 0.2376
+      "eurKwh": 0.2385
     },
     {
       "hora": 3,
-      "eurKwh": 0.2426
+      "eurKwh": 0.2381
     },
     {
       "hora": 4,
-      "eurKwh": 0.246
+      "eurKwh": 0.2351
     },
     {
       "hora": 5,
-      "eurKwh": 0.2439
+      "eurKwh": 0.2372
     },
     {
       "hora": 6,
-      "eurKwh": 0.2651
+      "eurKwh": 0.2477
     },
     {
       "hora": 7,
-      "eurKwh": 0.33
+      "eurKwh": 0.2813
     },
     {
       "hora": 8,
-      "eurKwh": 0.3671
+      "eurKwh": 0.3268
     },
     {
       "hora": 9,
-      "eurKwh": 0.2618
+      "eurKwh": 0.2587
     },
     {
       "hora": 10,
-      "eurKwh": 0.2529
+      "eurKwh": 0.2361
     },
     {
       "hora": 11,
-      "eurKwh": 0.1912
+      "eurKwh": 0.1917
     },
     {
       "hora": 12,
-      "eurKwh": 0.1494
+      "eurKwh": 0.1551
     },
     {
       "hora": 13,
-      "eurKwh": 0.1179
+      "eurKwh": 0.1309
     },
     {
       "hora": 14,
-      "eurKwh": 0.0504
+      "eurKwh": 0.0625
     },
     {
       "hora": 15,
-      "eurKwh": 0.0581
+      "eurKwh": 0.0676
     },
     {
       "hora": 16,
-      "eurKwh": 0.0939
+      "eurKwh": 0.1131
     },
     {
       "hora": 17,
-      "eurKwh": 0.1525
+      "eurKwh": 0.1427
     },
     {
       "hora": 18,
-      "eurKwh": 0.3271
+      "eurKwh": 0.3082
     },
     {
       "hora": 19,
-      "eurKwh": 0.4523
+      "eurKwh": 0.429
     },
     {
       "hora": 20,
-      "eurKwh": 0.5005
+      "eurKwh": 0.495
     },
     {
       "hora": 21,
-      "eurKwh": 0.471
+      "eurKwh": 0.4551
     },
     {
       "hora": 22,
-      "eurKwh": 0.3696
+      "eurKwh": 0.3067
     },
     {
       "hora": 23,
-      "eurKwh": 0.3199
+      "eurKwh": 0.2923
     }
   ],
-  "mediaDia": 0.2582,
-  "media30": 0.2282,
-  "media30SinImpuestos": 0.1794,
+  "mediaDia": 0.2471,
+  "media30": 0.2287,
+  "media30SinImpuestos": 0.1798,
   "dias30": {
-    "desde": "2026-08-25",
-    "hasta": "2026-09-23"
+    "desde": "2026-08-26",
+    "hasta": "2026-09-24"
   }
 }
