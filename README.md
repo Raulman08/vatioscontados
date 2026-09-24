@@ -10,7 +10,8 @@ Segundo sitio del sistema [[00_Sistema_Webs_Automatizadas|Webs_Automatizadas_pSE
 
 - En producción: `https://vatioscontados.pages.dev` (Cloudflare Pages, proyecto `vatioscontados`, subida directa con `wrangler`).
 - Contenido: 18 aparatos, 5 guías de ahorro, calculadora, precio de la luz por horas, "Cómo calculamos" y "Sobre".
-- Pendiente: dominio (candidato `vatioscontados.es`, sin DNS el 2026-09-23; confirmar en el registrador), Search Console, AdSense, importar los flujos de n8n.
+- Google Search Console: propiedad `https://vatioscontados.pages.dev/` verificada el 2026-09-24 (etiqueta HTML en `PUBLIC_GOOGLE_SITE_VERIFICATION` del `.env`; no quitarla). Indexación solicitada a partir del 25/09.
+- Pendiente: dominio (candidato `vatioscontados.es`, sin DNS el 2026-09-23; confirmar en el registrador), AdSense, importar los flujos de n8n.
 
 ## Cómo funciona
 
