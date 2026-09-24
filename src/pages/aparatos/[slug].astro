@@ -26,6 +26,9 @@ const precio = await obtenerPrecioLuz();
 const p = precio.media30;
 const url = new URL(`/aparatos/${aparato.id}/`, Astro.site).toString();
 const fecha = data.updatedDate ?? data.pubDate;
+// Los euros de la página se recalculan en cada build con el precio del día: dateModified debe reflejar
+// ese dato, no solo la fecha del texto (si no, la señal de frescura no refleja el cambio real diario).
+const dateModified = new Date(Math.max(fecha.getTime(), new Date(precio.consultado).getTime()));
 
 const escenarios: { clave: Escenario; nombre: string }[] = [
   { clave: 'min', nombre: 'Bajo' },
@@ -57,7 +60,7 @@ const migas = [
 
 <Layout title={data.seoTitle ?? data.title} description={data.description} type="article">
   <BreadcrumbSchema slot="head" items={migas.map((m) => ({ name: m.name, url: new URL(m.path, Astro.site).toString() }))} />
-  <ArticleSchema slot="head" title={data.title} description={data.description} url={url} datePublished={data.pubDate} dateModified={fecha} />
+  <ArticleSchema slot="head" title={data.title} description={data.description} url={url} datePublished={data.pubDate} dateModified={dateModified} />
   {data.faqs.length > 0 && <FaqSchema slot="head" items={data.faqs} />}
 
   <nav class="breadcrumbs" aria-label="Migas de pan">

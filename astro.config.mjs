@@ -12,6 +12,9 @@ const env = loadEnv(process.env.NODE_ENV ?? 'production', process.cwd(), 'PUBLIC
 export default defineConfig({
   // Pendiente de dominio propio (candidato: vatioscontados.es). Al cambiarlo, el robots.txt y el sitemap se actualizan solos.
   site: 'https://vatioscontados.pages.dev',
+  // Todas las URLs internas (rutaDe(), /aparatos/<slug>/) ya llevan "/" final; fijarlo evita que el canonical
+  // se autoconstruya distinto si alguien pide la ruta sin barra y Cloudflare Pages no redirige.
+  trailingSlash: 'always',
   integrations: [sitemap()],
   markdown: {
     processor: satteri({

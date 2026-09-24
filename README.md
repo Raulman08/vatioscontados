@@ -2,7 +2,7 @@
 
 # Vatios Contados
 
-Segundo sitio del sistema [[00_Sistema_Webs_Automatizadas|Webs_Automatizadas_pSEO]], creado el 2026-09-23 a partir de `_Base_Astro`. Nicho: **cuánto gasta cada aparato de casa en euros**, con el precio real de la luz (PVPC) de Red Eléctrica. Monetización principal prevista: **anuncios** (búsquedas informativas de mucho volumen); afiliación secundaria (medidores de consumo, aparatos eficientes). Por qué este nicho, en §0.2 del documento maestro.
+Segundo sitio del sistema [[00_Sistema_Webs_Automatizadas|Webs_Automatizadas_pSEO]], creado el 2026-09-23 a partir de `_Base_Astro`. Nicho: **cuánto gasta cada aparato de casa en euros**, con el precio real de la luz (PVPC) de Red Eléctrica. Monetización principal prevista: **anuncios** (búsquedas informativas de mucho volumen); afiliación secundaria (medidores de consumo, aparatos eficientes). Por qué este nicho, en §0.2 del documento maestro. Antes de publicar contenido nuevo, checklist en [[SEO_GUIDELINES]].
 
 **Repo independiente del vault**: tiene su propio `.git` y la carpeta está en el `.gitignore` raíz del vault. Remoto: `github.com/Raulman08/vatioscontados` (privado, primer push el 2026-09-24).
 
